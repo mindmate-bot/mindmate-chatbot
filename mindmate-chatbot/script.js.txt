@@ -1,0 +1,41 @@
+const form = document.getElementById("chat-form");
+const chatBox = document.getElementById("chat-box");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const userInput = document.getElementById("user-input").value;
+  addMessage("user", userInput);
+
+  document.getElementById("user-input").value = "";
+
+  // Show "typing..." message
+  addMessage("bot", "Typing...");
+
+  const response = await getBotResponse(userInput);
+  
+  // Replace last message with actual response
+  chatBox.lastChild.innerText = "🤖: " + response;
+});
+
+function addMessage(sender, text) {
+  const msg = document.createElement("div");
+  msg.classList.add("message", sender);
+  msg.innerText = (sender === "user" ? "🧑: " : "🤖: ") + text;
+  chatBox.appendChild(msg);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// API Call to HuggingFace Inference
+async function getBotResponse(userMessage) {
+  const res = await fetch("https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer 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",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ inputs: { text: userMessage } }),
+  });
+
+  const data = await res.json();
+  return data.generated_text || "Sorry, I couldn’t think of a reply.";
+}
